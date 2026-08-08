@@ -1,0 +1,182 @@
+import React from 'react';
+import {
+  LayoutDashboard,
+  Truck,
+  ClipboardList,
+  Filter,
+  Layers,
+  AlertOctagon,
+  ChevronRight,
+  X
+} from 'lucide-react';
+import { useData } from '../../context/DataContext';
+
+interface SidebarProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  isMobileMenuOpen?: boolean;
+  setIsMobileMenuOpen?: (open: boolean) => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({
+  activeTab,
+  setActiveTab,
+  isMobileMenuOpen,
+  setIsMobileMenuOpen
+}) => {
+  const { priorityLocations, roLocations, standardLocations } = useData();
+
+  const navItems = [
+    {
+      id: 'dashboard',
+      label: 'Main Dashboard & Insight',
+      icon: LayoutDashboard,
+      badge: null,
+      description: 'Location log, receiving stats & consumption analytics'
+    },
+    {
+      id: 'bowser',
+      label: 'Bowser Duty Management',
+      icon: Truck,
+      badge: null,
+      description: 'Capacity, Naha No, TA, ME & Schedule pop-up creator'
+    },
+    {
+      id: 'loading',
+      label: 'Real-Time Loading Log',
+      icon: ClipboardList,
+      badge: null,
+      description: 'Loading interface with timer, pump & PIN lock'
+    },
+    {
+      id: 'ro-points',
+      label: 'RO Water Point Locations',
+      icon: Filter,
+      badge: roLocations.length,
+      badgeColor: 'bg-cyan-900/80 text-cyan-300 border-cyan-700/50',
+      description: 'Pure RO station tracking, tank logs & infographics'
+    },
+    {
+      id: 'standard-points',
+      label: 'Standard Water Locations',
+      icon: Layers,
+      badge: standardLocations.length,
+      badgeColor: 'bg-blue-900/80 text-blue-300 border-blue-700/50',
+      description: 'Standard water supply points & bulk storage logs'
+    },
+    {
+      id: 'requests',
+      label: 'Request & Priority System',
+      icon: AlertOctagon,
+      badge: priorityLocations.length,
+      badgeColor: 'bg-rose-900/90 text-rose-200 border-rose-700/60 animate-pulse',
+      description: 'Elevate priority locations & manage dispatch orders'
+    }
+  ];
+
+  const handleSelectTab = (id: string) => {
+    setActiveTab(id);
+    if (setIsMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  return (
+    <aside
+      className={`w-full lg:w-72 bg-slate-900/95 lg:bg-slate-900/60 border-b lg:border-b-0 lg:border-r border-slate-800/80 p-4 flex-col justify-between shrink-0 transition-all duration-300 ${
+        isMobileMenuOpen ? 'flex' : 'hidden lg:flex'
+      }`}
+    >
+      <div className="space-y-4">
+        {/* Section Header */}
+        <div className="px-3 py-2 flex items-center justify-between">
+          <div>
+            <h2 className="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">
+              Core Administrative Modules
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">Dockyard Water Operations</p>
+          </div>
+
+          {setIsMobileMenuOpen && (
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="lg:hidden p-1 text-slate-400 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Module Navigation Buttons */}
+        <nav className="space-y-1.5">
+          {navItems.map(item => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleSelectTab(item.id)}
+                className={`w-full text-left p-3 rounded-xl transition-all duration-200 group flex items-start justify-between border ${
+                  isActive
+                    ? 'bg-slate-800/90 text-white border-cyan-500/50 shadow-lg shadow-cyan-950/40 ring-1 ring-cyan-500/20'
+                    : 'text-slate-400 border-transparent hover:bg-slate-800/40 hover:text-slate-200'
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  <div
+                    className={`p-2 rounded-lg mt-0.5 transition-colors ${
+                      isActive
+                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-400/30'
+                        : 'bg-slate-800/80 text-slate-400 group-hover:text-slate-200'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-xs font-bold ${isActive ? 'text-white' : 'text-slate-300'}`}>
+                        {item.label}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5 font-normal">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-1 pl-2">
+                  {item.badge !== null && (
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${item.badgeColor}`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                  <ChevronRight
+                    className={`h-4 w-4 transition-transform ${
+                      isActive ? 'text-cyan-400 translate-x-0.5' : 'text-slate-600 opacity-0 group-hover:opacity-100'
+                    }`}
+                  />
+                </div>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Footer Info Box */}
+      <div className="mt-6 p-3.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-xs space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400">
+            System Specs
+          </span>
+          <span className="text-[10px] text-slate-400">Ver. 2026.8</span>
+        </div>
+        <p className="text-[11px] text-slate-300">
+          Navy Dockyard Premises Water Distribution & Bowser Dispatch Management.
+        </p>
+      </div>
+    </aside>
+  );
+};
