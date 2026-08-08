@@ -1,5 +1,14 @@
 export type WaterType = 'RO Water' | 'Normal Water' | 'Well Water';
 
+export type LocationType =
+  | 'Accomodation - Officers'
+  | 'Accomodation - Sailors'
+  | 'Accomodation - Woman Sailors'
+  | 'Accomodation - Civil Staff'
+  | 'Hotel / Holiday Bungalow'
+  | 'Industrial / Workshop'
+  | 'Hospital / Medical';
+
 export type RequestStatus = 'Pending' | 'Priority' | 'Assigned' | 'In-Transit' | 'Fulfilled' | 'Rejected';
 
 export interface ScheduleItem {
@@ -51,7 +60,7 @@ export interface LoadingLog {
   startTime?: string;
   stopTime?: string;
   durationSeconds?: number;
-  pumpMode?: 'Loading' | 'Unloading' | 'Tank Empty';
+  pumpMode?: 'Loading' | 'Unloading' | 'Tank Empty' | 'Arrived Pump House' | 'Arrived Dockyard';
   operatorName?: string;
   gantryOperator?: string;
   remarks?: string;
@@ -90,6 +99,7 @@ export interface WaterLocation {
   name: string;
   base: string; // e.g. SLNS Gemunu, Naval Dockyard East, Fleet Maintenance, SLNS Tissa
   category: 'RO' | 'Standard';
+  locationType?: LocationType;
   tankCapacity: number; // Liters
   currentLevel: number; // Liters
   lastLoadedDate: string; // YYYY-MM-DD HH:mm
@@ -98,7 +108,7 @@ export interface WaterLocation {
   consumingPeopleCount: number;
   benefactors: string[];
   pointOfContact: PointOfContact;
-  coordinates: {
+  coordinates?: {
     lat: number;
     lng: number;
   };

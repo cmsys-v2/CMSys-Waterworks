@@ -35,6 +35,8 @@ interface LocationDetailModalProps {
 export const LocationDetailModal: React.FC<LocationDetailModalProps> = ({ location, onClose }) => {
   const { togglePriorityLocation, quickFillLocation, updateLocation } = useData();
 
+  const coords = location.coordinates || { lat: 8.5725, lng: 81.2385 };
+
   // Edit Mode State
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(location.name);
@@ -47,8 +49,6 @@ export const LocationDetailModal: React.FC<LocationDetailModalProps> = ({ locati
   const [editPocRank, setEditPocRank] = useState(location.pointOfContact.rank);
   const [editPocPhone, setEditPocPhone] = useState(location.pointOfContact.phone);
   const [editPocDept, setEditPocDept] = useState(location.pointOfContact.department);
-  const [editLat, setEditLat] = useState(location.coordinates.lat);
-  const [editLng, setEditLng] = useState(location.coordinates.lng);
 
   // Quick Fill State
   const [fillVolume, setFillVolume] = useState<number>(5000);
@@ -82,10 +82,6 @@ export const LocationDetailModal: React.FC<LocationDetailModalProps> = ({ locati
         rank: editPocRank,
         phone: editPocPhone,
         department: editPocDept
-      },
-      coordinates: {
-        lat: Number(editLat),
-        lng: Number(editLng)
       }
     };
 
@@ -105,7 +101,7 @@ export const LocationDetailModal: React.FC<LocationDetailModalProps> = ({ locati
     togglePriorityLocation(location.id, 'Elevated directly from Location Detail Modal');
   };
 
-  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${location.coordinates.lat},${location.coordinates.lng}`;
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
@@ -128,6 +124,12 @@ export const LocationDetailModal: React.FC<LocationDetailModalProps> = ({ locati
                 Base: {location.base}
               </span>
 
+              {location.locationType && (
+                <span className="text-xs font-bold text-cyan-300 bg-cyan-950 px-2.5 py-1 rounded border border-cyan-800">
+                  {location.locationType}
+                </span>
+              )}
+
               {location.isPriority && (
                 <span className="bg-rose-950 text-rose-300 font-extrabold text-xs px-2.5 py-1 rounded border border-rose-700 animate-pulse flex items-center gap-1">
                   <AlertTriangle className="h-3.5 w-3.5 text-rose-400" /> Priority Location
@@ -136,10 +138,6 @@ export const LocationDetailModal: React.FC<LocationDetailModalProps> = ({ locati
             </div>
 
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">{location.name}</h2>
-            <p className="text-xs text-slate-400 flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5 text-cyan-400" />
-              Dockyard Coordinates: {location.coordinates.lat}° N, {location.coordinates.lng}° E
-            </p>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -165,7 +163,7 @@ export const LocationDetailModal: React.FC<LocationDetailModalProps> = ({ locati
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-6 pr-1">
-          {/* PIC 2 CORRECTION: EDITABLE LOCATION FORM */}
+          {/* Edit Form */}
           {isEditing ? (
             <form onSubmit={handleSaveEdits} className="bg-amber-950/20 border border-amber-800/60 p-5 rounded-2xl space-y-4 text-xs">
               <div className="flex items-center justify-between border-b border-amber-800/60 pb-2">
@@ -475,7 +473,7 @@ export const LocationDetailModal: React.FC<LocationDetailModalProps> = ({ locati
                     <MapPin className="h-10 w-10 text-rose-500 animate-bounce relative z-10" />
                     <div className="relative z-10 text-center mt-1">
                       <span className="font-bold text-white text-xs">{location.name}</span>
-                      <p className="text-[10px] text-slate-400 font-mono">{location.coordinates.lat}° N, {location.coordinates.lng}° E</p>
+                      <p className="text-[10px] text-slate-400 font-mono">{coords.lat}° N, {coords.lng}° E</p>
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
-import { WaterLocation } from '../../types/waterDistribution';
+import { WaterLocation, LocationType } from '../../types/waterDistribution';
 import { LocationDetailModal } from './LocationDetailModal';
 import {
   Filter,
@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Plus,
   X,
-  CheckCircle2
+  CheckCircle2,
+  Building
 } from 'lucide-react';
 
 interface WaterPointLocationsProps {
@@ -29,25 +30,29 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBase, setSelectedBase] = useState('ALL');
 
-  // Add Location Modal State
+  // PIC 2 CORRECTION: ADD LOCATION FORM STATE (LATITUDE & LONGITUDE REMOVED!)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newBase, setNewBase] = useState('SLNS Gemunu');
+  const [newLocationType, setNewLocationType] = useState<LocationType>('Accomodation - Officers');
   const [newCapacity, setNewCapacity] = useState<number>(20000);
-  const [newMonthlyAvg, setNewMonthlyAvg] = useState<number>(100000);
   const [newPeopleCount, setNewPeopleCount] = useState<number>(350);
-  const [newBenefactors, setNewBenefactors] = useState('Fleet Officers, Maintenance Hands');
+  const [newBenefactors, setNewBenefactors] = useState('Officers Mess Crew, Wardroom Staff');
   const [newPocName, setNewPocName] = useState('Lt Cdr Silva');
   const [newPocRank, setNewPocRank] = useState('Lieutenant Commander');
   const [newPocPhone, setNewPocPhone] = useState('+94 77 999 8877');
-  const [newPocDept, setNewPocDept] = useState('Dockyard Engineering');
-  const [newLat, setNewLat] = useState<number>(8.5730);
-  const [newLng, setNewLng] = useState<number>(81.2350);
+  const [newPocDept, setNewPocDept] = useState('Dockyard Operations');
+
+  // Dynamic Monthly Average calculation based on capacity & people count (e.g. 150L/person/day * 30 days)
+  const computedMonthlyAvg = Math.round(newPeopleCount * 150 * 30);
 
   const bases = Array.from(new Set(locations.map(l => l.base)));
 
   const filteredLocations = locations.filter(loc => {
-    const matchesSearch = loc.name.toLowerCase().includes(searchQuery.toLowerCase()) || loc.base.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loc.base.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (loc.locationType && loc.locationType.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesBase = selectedBase === 'ALL' || loc.base === selectedBase;
     return matchesSearch && matchesBase;
   });
@@ -58,8 +63,9 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
       name: newName,
       base: newBase,
       category,
+      locationType: newLocationType,
       tankCapacity: newCapacity,
-      monthlyAvgConsumption: newMonthlyAvg,
+      monthlyAvgConsumption: computedMonthlyAvg,
       consumingPeopleCount: newPeopleCount,
       benefactors: newBenefactors.split(',').map(b => b.trim()).filter(Boolean),
       pointOfContact: {
@@ -68,15 +74,16 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
         phone: newPocPhone,
         department: newPocDept
       },
+      // Default coordinates (lat/long fields removed from form as requested!)
       coordinates: {
-        lat: newLat,
-        lng: newLng
+        lat: 8.5725,
+        lng: 81.2385
       }
     });
 
     setIsAddModalOpen(false);
     setNewName('');
-    alert(`New ${category} Water Location "${newName}" added successfully!`);
+    alert(`New ${category} Water Location "${newName}" added successfully! Monthly Avg: ${computedMonthlyAvg.toLocaleString()}L/mo`);
   };
 
   return (
@@ -100,7 +107,7 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
             {category === 'RO' ? 'RO Water Point Locations' : 'Standard Water Point Locations'}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Rich tracking interface displaying Name, Base, Tank Capacity, Last Loaded Date, and Monthly Average Consumption.
+            Rich tracking interface displaying Name, Base, Location Type, Tank Capacity, Last Loaded Date, and Monthly Average Consumption.
           </p>
         </div>
 
@@ -112,7 +119,7 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search location or base..."
+              placeholder="Search location or type..."
               className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
             />
           </div>
@@ -128,7 +135,6 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
             ))}
           </select>
 
-          {/* PIC 3 & 4 CORRECTION: ADD LOCATIONS OPTION */}
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl shadow-lg shadow-cyan-950/40 flex items-center space-x-1.5 transition-all"
@@ -152,15 +158,22 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                      loc.category === 'RO'
-                        ? 'bg-cyan-950 text-cyan-300 border-cyan-800'
-                        : 'bg-blue-950 text-blue-300 border-blue-800'
-                    }`}
-                  >
-                    {loc.base}
-                  </span>
+                  <div className="flex items-center space-x-1.5">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                        loc.category === 'RO'
+                          ? 'bg-cyan-950 text-cyan-300 border-cyan-800'
+                          : 'bg-blue-950 text-blue-300 border-blue-800'
+                      }`}
+                    >
+                      {loc.base}
+                    </span>
+                    {loc.locationType && (
+                      <span className="text-[10px] font-semibold bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
+                        {loc.locationType}
+                      </span>
+                    )}
+                  </div>
 
                   {loc.isPriority && (
                     <span className="text-[10px] font-extrabold bg-rose-950 text-rose-300 px-2 py-0.5 rounded border border-rose-800 animate-pulse flex items-center gap-1">
@@ -173,9 +186,6 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
                   <h3 className="text-base font-extrabold text-white group-hover:text-cyan-400 transition-colors">
                     {loc.name}
                   </h3>
-                  <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                    <MapPin className="h-3 w-3 text-cyan-400" /> Lat: {loc.coordinates.lat}, Lng: {loc.coordinates.lng}
-                  </p>
                 </div>
 
                 <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2">
@@ -222,7 +232,7 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
               </div>
 
               <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-cyan-400 group-hover:text-cyan-300">
-                <span>View Interactive Modal & Maps</span>
+                <span>View Interactive Modal & Details</span>
                 <ChevronRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -230,7 +240,6 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
         })}
       </div>
 
-      {/* Detail Modal */}
       {selectedLocation && (
         <LocationDetailModal
           location={selectedLocation}
@@ -238,7 +247,7 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
         />
       )}
 
-      {/* POP-UP MODAL: Add New Water Location */}
+      {/* POP-UP MODAL: PIC 2 ADD NEW LOCATION (LATITUDE & LONGITUDE REMOVED!) */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-xl rounded-2xl p-6 shadow-2xl space-y-5 animate-in fade-in my-auto">
@@ -264,7 +273,7 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
                     required
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
-                    placeholder="e.g. Pier 4 Submarine RO Station"
+                    placeholder="e.g. Officers Wardroom Complex"
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
                   />
                 </div>
@@ -281,9 +290,30 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
                 </div>
               </div>
 
+              {/* PIC 2 CORRECTION: LOCATION TYPES SELECTION */}
+              <div>
+                <label className="block text-slate-300 font-bold mb-1 flex items-center gap-1.5">
+                  <Building className="h-4 w-4 text-cyan-400" />
+                  Select Location Type
+                </label>
+                <select
+                  value={newLocationType}
+                  onChange={e => setNewLocationType(e.target.value as LocationType)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold"
+                >
+                  <option value="Accomodation - Officers">Accomodation - Officers</option>
+                  <option value="Accomodation - Sailors">Accomodation - Sailors</option>
+                  <option value="Accomodation - Woman Sailors">Accomodation - Woman Sailors</option>
+                  <option value="Accomodation - Civil Staff">Accomodation - Civil Staff</option>
+                  <option value="Hotel / Holiday Bungalow">Hotel / Holiday Bungalow</option>
+                  <option value="Industrial / Workshop">Industrial / Workshop</option>
+                  <option value="Hospital / Medical">Hospital / Medical</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Capacity (L)</label>
+                  <label className="block text-slate-300 font-bold mb-1">Tank Capacity (L)</label>
                   <input
                     type="number"
                     required
@@ -293,17 +323,7 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Monthly Avg (L)</label>
-                  <input
-                    type="number"
-                    required
-                    value={newMonthlyAvg}
-                    onChange={e => setNewMonthlyAvg(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-bold mb-1">People Count</label>
+                  <label className="block text-slate-300 font-bold mb-1">Consuming People</label>
                   <input
                     type="number"
                     required
@@ -311,6 +331,12 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
                     onChange={e => setNewPeopleCount(Number(e.target.value))}
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold"
                   />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Calculated Monthly Avg</label>
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-amber-300 font-mono font-bold text-xs">
+                    {computedMonthlyAvg.toLocaleString()} L/mo
+                  </div>
                 </div>
               </div>
 
@@ -321,7 +347,7 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
                   required
                   value={newBenefactors}
                   onChange={e => setNewBenefactors(e.target.value)}
-                  placeholder="Submarine Crew, Pier Staff"
+                  placeholder="Officers Mess Crew, Wardroom Staff"
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white"
                 />
               </div>
@@ -349,30 +375,7 @@ export const WaterPointLocations: React.FC<WaterPointLocationsProps> = ({ catego
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-400 mb-1">Latitude (°N)</label>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    required
-                    value={newLat}
-                    onChange={e => setNewLat(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-white font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-400 mb-1">Longitude (°E)</label>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    required
-                    value={newLng}
-                    onChange={e => setNewLng(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-white font-mono"
-                  />
-                </div>
-              </div>
+              {/* PIC 2 CORRECTION: LATITUDE AND LONGITUDE FIELDS HAVE BEEN REMOVED! */}
 
               <div className="pt-2 flex justify-end space-x-3">
                 <button
