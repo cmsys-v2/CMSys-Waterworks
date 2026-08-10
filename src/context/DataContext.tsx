@@ -4,218 +4,150 @@ import {
   BowserDuty,
   LoadingLog,
   WaterRequest,
-  WaterType,
-  ScheduleItem
+  BowserRegistryEntry
 } from '../types/waterDistribution';
 import {
-  INITIAL_RO_LOCATIONS,
-  INITIAL_STANDARD_LOCATIONS,
-  INITIAL_BOWSER_DUTIES,
-  INITIAL_LOADING_LOGS,
-  INITIAL_REQUESTS
+  SEED_RO_LOCATIONS,
+  SEED_STANDARD_LOCATIONS,
+  SEED_BOWSER_DUTIES,
+  SEED_LOADING_LOGS,
+  SEED_WATER_REQUESTS
 } from '../services/seedData';
+import { PUBLISHED_BOWSER_REGISTRY } from '../services/bowserPinRegistry';
 
 interface DataContextType {
   roLocations: WaterLocation[];
   standardLocations: WaterLocation[];
   allLocations: WaterLocation[];
   bowserDuties: BowserDuty[];
+  bowserRegistry: BowserRegistryEntry[];
   loadingLogs: LoadingLog[];
   requests: WaterRequest[];
   priorityLocations: WaterLocation[];
   selectedLocation: WaterLocation | null;
   setSelectedLocation: (loc: WaterLocation | null) => void;
-  
-  // Actions
-  addBowserDuty: (duty: Omit<BowserDuty, 'id' | 'createdAt'>) => void;
   addLoadingLog: (log: Omit<LoadingLog, 'id' | 'createdAt'>) => void;
+  addLocation: (loc: Omit<WaterLocation, 'id' | 'currentLevel' | 'lastLoadedDate' | 'lastLoadedAmount' | 'futureSchedules' | 'supplyHistory' | 'isPriority' | 'createdAt'>) => void;
+  updateLocation: (updated: WaterLocation) => void;
+  deleteLocation: (id: string) => void;
+  addBowserDuty: (duty: Omit<BowserDuty, 'id' | 'createdAt'>) => void;
+  updateBowserDuty: (updated: BowserDuty) => void;
+  deleteBowser: (vehicleNo: string) => void;
+  addBowserRegistryEntry: (entry: BowserRegistryEntry) => void;
+  updateBowserRegistryEntry: (updated: BowserRegistryEntry) => void;
   togglePriorityLocation: (locationId: string, reason?: string) => void;
-  addRequest: (req: Omit<WaterRequest, 'id' | 'requestedAt'>) => void;
+  createWaterRequest: (req: Omit<WaterRequest, 'id' | 'status' | 'requestedAt'>) => void;
+  addRequest: (req: Omit<WaterRequest, 'id' | 'status' | 'requestedAt'>) => void;
   updateRequestStatus: (requestId: string, status: WaterRequest['status']) => void;
-  quickFillLocation: (locationId: string, volume: number, bowserNo: string, waterType: WaterType) => void;
-  addLocation: (location: Omit<WaterLocation, 'id' | 'createdAt' | 'currentLevel' | 'lastLoadedDate' | 'lastLoadedAmount' | 'futureSchedules' | 'supplyHistory' | 'isPriority'>) => void;
-  updateLocation: (location: WaterLocation) => void;
+  quickFillLocation: (locationId: string, amount: number, bowserNo: string, waterType: any) => void;
+  bulkImportLocations: (imported: WaterLocation[]) => void;
+  bulkImportBowsers: (imported: BowserRegistryEntry[]) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const STORAGE_KEYS = {
-  RO: 'cced_locations_ro',
-  STD: 'cced_locations_std',
-  DUTIES: 'cced_bowser_duties',
-  LOGS: 'cced_loading_logs',
-  REQUESTS: 'cced_water_requests',
-};
-
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Persistence with localStorage
   const [roLocations, setRoLocations] = useState<WaterLocation[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.RO);
-    return saved ? JSON.parse(saved) : INITIAL_RO_LOCATIONS;
+    const saved = localStorage.getItem('cced_locations_ro');
+    return saved ? JSON.parse(saved) : SEED_RO_LOCATIONS;
   });
 
   const [standardLocations, setStandardLocations] = useState<WaterLocation[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.STD);
-    return saved ? JSON.parse(saved) : INITIAL_STANDARD_LOCATIONS;
+    const saved = localStorage.getItem('cced_locations_std');
+    return saved ? JSON.parse(saved) : SEED_STANDARD_LOCATIONS;
   });
 
   const [bowserDuties, setBowserDuties] = useState<BowserDuty[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.DUTIES);
-    return saved ? JSON.parse(saved) : INITIAL_BOWSER_DUTIES;
+    const saved = localStorage.getItem('cced_bowser_duties');
+    return saved ? JSON.parse(saved) : SEED_BOWSER_DUTIES;
+  });
+
+  const [bowserRegistry, setBowserRegistry] = useState<BowserRegistryEntry[]>(() => {
+    const saved = localStorage.getItem('cced_bowser_registry_custom');
+    return saved ? JSON.parse(saved) : PUBLISHED_BOWSER_REGISTRY;
   });
 
   const [loadingLogs, setLoadingLogs] = useState<LoadingLog[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.LOGS);
-    return saved ? JSON.parse(saved) : INITIAL_LOADING_LOGS;
+    const saved = localStorage.getItem('cced_loading_logs');
+    return saved ? JSON.parse(saved) : SEED_LOADING_LOGS;
   });
 
   const [requests, setRequests] = useState<WaterRequest[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.REQUESTS);
-    return saved ? JSON.parse(saved) : INITIAL_REQUESTS;
+    const saved = localStorage.getItem('cced_water_requests');
+    return saved ? JSON.parse(saved) : SEED_WATER_REQUESTS;
   });
 
   const [selectedLocation, setSelectedLocation] = useState<WaterLocation | null>(null);
 
+  // Sync state to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.RO, JSON.stringify(roLocations));
+    localStorage.setItem('cced_locations_ro', JSON.stringify(roLocations));
   }, [roLocations]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.STD, JSON.stringify(standardLocations));
+    localStorage.setItem('cced_locations_std', JSON.stringify(standardLocations));
   }, [standardLocations]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(bowserDuties));
+    localStorage.setItem('cced_bowser_duties', JSON.stringify(bowserDuties));
   }, [bowserDuties]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.LOGS, JSON.stringify(loadingLogs));
+    localStorage.setItem('cced_bowser_registry_custom', JSON.stringify(bowserRegistry));
+  }, [bowserRegistry]);
+
+  useEffect(() => {
+    localStorage.setItem('cced_loading_logs', JSON.stringify(loadingLogs));
   }, [loadingLogs]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify(requests));
+    localStorage.setItem('cced_water_requests', JSON.stringify(requests));
   }, [requests]);
 
   const allLocations = [...roLocations, ...standardLocations];
-  const priorityLocations = allLocations.filter(loc => loc.isPriority);
-
-  const addBowserDuty = (dutyData: Omit<BowserDuty, 'id' | 'createdAt'>) => {
-    const newDuty: BowserDuty = {
-      ...dutyData,
-      id: `duty-${Date.now()}`,
-      createdAt: new Date().toISOString()
-    };
-    setBowserDuties(prev => [newDuty, ...prev]);
-  };
+  const priorityLocations = allLocations.filter(l => l.isPriority);
 
   const addLoadingLog = (logData: Omit<LoadingLog, 'id' | 'createdAt'>) => {
     const newLog: LoadingLog = {
       ...logData,
-      id: `load-${Date.now()}`,
+      id: `log-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
     setLoadingLogs(prev => [newLog, ...prev]);
 
-    const targetLoc = allLocations.find(l => l.name === logData.locationName);
-    if (targetLoc) {
-      quickFillLocation(
-        targetLoc.id,
-        logData.volumeLoaded,
-        logData.bowserVehicleNo || 'NAHA-01',
-        logData.waterType
-      );
-    }
-  };
-
-  const togglePriorityLocation = (locationId: string, reason?: string) => {
-    const updater = (prev: WaterLocation[]) =>
-      prev.map(loc => {
-        if (loc.id === locationId) {
-          const newPriority = !loc.isPriority;
-          return {
-            ...loc,
-            isPriority: newPriority,
-            priorityReason: newPriority ? (reason || 'Elevated to Priority by Admin (SCE WW)') : undefined
-          };
-        }
-        return loc;
-      });
-
-    setRoLocations(updater);
-    setStandardLocations(updater);
-
-    if (selectedLocation && selectedLocation.id === locationId) {
-      setSelectedLocation(prev => prev ? ({
-        ...prev,
-        isPriority: !prev.isPriority,
-        priorityReason: !prev.isPriority ? (reason || 'Elevated to Priority by Admin (SCE WW)') : undefined
-      }) : null);
-    }
-  };
-
-  const addRequest = (reqData: Omit<WaterRequest, 'id' | 'requestedAt'>) => {
-    const now = new Date();
-    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    
-    const newRequest: WaterRequest = {
-      ...reqData,
-      id: `req-${Date.now()}`,
-      requestedAt: formattedDate
-    };
-    setRequests(prev => [newRequest, ...prev]);
-
-    if (reqData.isPriority || reqData.urgency === 'Emergency') {
-      togglePriorityLocation(reqData.locationId, `Elevated due to ${reqData.urgency} Request`);
-    }
-  };
-
-  const updateRequestStatus = (requestId: string, status: WaterRequest['status']) => {
-    setRequests(prev =>
-      prev.map(r => (r.id === requestId ? { ...r, status } : r))
-    );
-  };
-
-  const quickFillLocation = (locationId: string, volume: number, bowserNo: string, waterType: WaterType) => {
-    const now = new Date();
-    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-    const updateLoc = (loc: WaterLocation): WaterLocation => {
-      if (loc.id !== locationId) return loc;
-      const newLevel = Math.min(loc.tankCapacity, loc.currentLevel + volume);
-      const newSupplyLog = {
-        id: `sh-${Date.now()}`,
-        date: formattedDate,
-        bowserVehicleNo: bowserNo,
-        waterType,
-        amountLoaded: volume,
-        driverName: 'SCE Duty Bowser Operator'
-      };
-      return {
-        ...loc,
+    // Automatically update target location current level
+    const target = allLocations.find(l => l.name.toLowerCase() === logData.locationName.toLowerCase());
+    if (target) {
+      const newLevel = Math.min(target.tankCapacity, target.currentLevel + logData.volumeLoaded);
+      const updated: WaterLocation = {
+        ...target,
         currentLevel: newLevel,
-        lastLoadedDate: formattedDate,
-        lastLoadedAmount: volume,
-        supplyHistory: [newSupplyLog, ...loc.supplyHistory]
+        lastLoadedDate: new Date().toISOString().slice(0, 16).replace('T', ' '),
+        lastLoadedAmount: logData.volumeLoaded,
+        supplyHistory: [
+          {
+            id: `sup-${Date.now()}`,
+            date: new Date().toISOString().slice(0, 10),
+            bowserVehicleNo: logData.bowserVehicleNo,
+            waterType: logData.waterType,
+            amountLoaded: logData.volumeLoaded,
+            locationName: target.name
+          },
+          ...target.supplyHistory
+        ]
       };
-    };
-
-    setRoLocations(prev => prev.map(updateLoc));
-    setStandardLocations(prev => prev.map(updateLoc));
-
-    if (selectedLocation && selectedLocation.id === locationId) {
-      setSelectedLocation(prev => prev ? updateLoc(prev) : null);
+      updateLocation(updated);
     }
   };
 
-  const addLocation = (locData: Omit<WaterLocation, 'id' | 'createdAt' | 'currentLevel' | 'lastLoadedDate' | 'lastLoadedAmount' | 'futureSchedules' | 'supplyHistory' | 'isPriority'>) => {
-    const now = new Date();
-    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} 00:00`;
-
+  const addLocation = (locData: Omit<WaterLocation, 'id' | 'currentLevel' | 'lastLoadedDate' | 'lastLoadedAmount' | 'futureSchedules' | 'supplyHistory' | 'isPriority' | 'createdAt'>) => {
     const newLoc: WaterLocation = {
       ...locData,
-      id: `${locData.category.toLowerCase()}-loc-${Date.now()}`,
-      currentLevel: locData.tankCapacity * 0.5,
-      lastLoadedDate: formattedDate,
-      lastLoadedAmount: 5000,
+      id: `loc-${Date.now()}`,
+      currentLevel: Math.round(locData.tankCapacity * 0.5), // Default 50% fill
+      lastLoadedDate: 'Just Added',
+      lastLoadedAmount: 0,
       futureSchedules: [],
       supplyHistory: [],
       isPriority: false,
@@ -229,19 +161,108 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateLocation = (updatedLoc: WaterLocation) => {
-    const updateFn = (prev: WaterLocation[]) =>
-      prev.map(l => (l.id === updatedLoc.id ? updatedLoc : l));
-
-    if (updatedLoc.category === 'RO') {
-      setRoLocations(updateFn);
+  const updateLocation = (updated: WaterLocation) => {
+    if (updated.category === 'RO') {
+      setRoLocations(prev => prev.map(l => (l.id === updated.id ? updated : l)));
     } else {
-      setStandardLocations(updateFn);
+      setStandardLocations(prev => prev.map(l => (l.id === updated.id ? updated : l)));
     }
+    if (selectedLocation && selectedLocation.id === updated.id) {
+      setSelectedLocation(updated);
+    }
+  };
 
-    if (selectedLocation && selectedLocation.id === updatedLoc.id) {
-      setSelectedLocation(updatedLoc);
+  const deleteLocation = (id: string) => {
+    setRoLocations(prev => prev.filter(l => l.id !== id));
+    setStandardLocations(prev => prev.filter(l => l.id !== id));
+    if (selectedLocation && selectedLocation.id === id) {
+      setSelectedLocation(null);
     }
+  };
+
+  const addBowserDuty = (dutyData: Omit<BowserDuty, 'id' | 'createdAt'>) => {
+    const newDuty: BowserDuty = {
+      ...dutyData,
+      id: `duty-${Date.now()}`,
+      createdAt: new Date().toISOString()
+    };
+    setBowserDuties(prev => [newDuty, ...prev]);
+  };
+
+  const updateBowserDuty = (updated: BowserDuty) => {
+    setBowserDuties(prev => prev.map(d => (d.id === updated.id ? updated : d)));
+  };
+
+  const deleteBowser = (vehicleNo: string) => {
+    setBowserRegistry(prev => prev.filter(b => b.vehicleNo !== vehicleNo));
+    setBowserDuties(prev => prev.filter(d => d.vehicleNo !== vehicleNo));
+  };
+
+  const addBowserRegistryEntry = (entry: BowserRegistryEntry) => {
+    setBowserRegistry(prev => [...prev.filter(b => b.vehicleNo !== entry.vehicleNo), entry]);
+  };
+
+  const updateBowserRegistryEntry = (updated: BowserRegistryEntry) => {
+    setBowserRegistry(prev => prev.map(b => (b.vehicleNo === updated.vehicleNo ? updated : b)));
+  };
+
+  const togglePriorityLocation = (locationId: string, reason?: string) => {
+    const target = allLocations.find(l => l.id === locationId);
+    if (!target) return;
+
+    const newPriorityState = !target.isPriority;
+    const updated: WaterLocation = {
+      ...target,
+      isPriority: newPriorityState,
+      priorityReason: newPriorityState ? reason || 'High Demand Elevated by Admin' : undefined
+    };
+    updateLocation(updated);
+  };
+
+  const createWaterRequest = (reqData: Omit<WaterRequest, 'id' | 'status' | 'requestedAt'>) => {
+    const newReq: WaterRequest = {
+      ...reqData,
+      id: `req-${Date.now()}`,
+      status: reqData.isPriority ? 'Priority' : 'Pending',
+      requestedAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+    };
+    setRequests(prev => [newReq, ...prev]);
+  };
+
+  const updateRequestStatus = (requestId: string, status: WaterRequest['status']) => {
+    setRequests(prev => prev.map(r => (r.id === requestId ? { ...r, status } : r)));
+  };
+
+  const quickFillLocation = (locationId: string, amount: number, bowserNo: string, waterType: any) => {
+    const target = allLocations.find(l => l.id === locationId);
+    if (!target) return;
+
+    addLoadingLog({
+      locationName: target.name,
+      volumeLoaded: amount,
+      waterType: waterType || (target.category === 'RO' ? 'RO Water' : 'Normal Water'),
+      timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      isManualOverride: false,
+      bowserVehicleNo: bowserNo,
+      bowserPinVerified: true,
+      remarks: 'Quick Log Fill from Location Details Modal'
+    });
+  };
+
+  const bulkImportLocations = (imported: WaterLocation[]) => {
+    const ro = imported.filter(l => l.category === 'RO');
+    const std = imported.filter(l => l.category !== 'RO');
+
+    if (ro.length > 0) {
+      setRoLocations(prev => [...ro, ...prev]);
+    }
+    if (std.length > 0) {
+      setStandardLocations(prev => [...std, ...prev]);
+    }
+  };
+
+  const bulkImportBowsers = (imported: BowserRegistryEntry[]) => {
+    setBowserRegistry(prev => [...imported, ...prev]);
   };
 
   return (
@@ -251,19 +272,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         standardLocations,
         allLocations,
         bowserDuties,
+        bowserRegistry,
         loadingLogs,
         requests,
         priorityLocations,
         selectedLocation,
         setSelectedLocation,
-        addBowserDuty,
         addLoadingLog,
+        addLocation,
+        updateLocation,
+        deleteLocation,
+        addBowserDuty,
+        updateBowserDuty,
+        deleteBowser,
+        addBowserRegistryEntry,
+        updateBowserRegistryEntry,
         togglePriorityLocation,
-        addRequest,
+        createWaterRequest,
+        addRequest: createWaterRequest,
         updateRequestStatus,
         quickFillLocation,
-        addLocation,
-        updateLocation
+        bulkImportLocations,
+        bulkImportBowsers
       }}
     >
       {children}
@@ -271,7 +301,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useData = (): DataContextType => {
+export const useData = () => {
   const context = useContext(DataContext);
   if (!context) {
     throw new Error('useData must be used within a DataProvider');

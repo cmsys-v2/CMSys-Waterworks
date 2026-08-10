@@ -9,6 +9,7 @@ import { BowserDutyManagement } from './components/bowser/BowserDutyManagement';
 import { RealTimeLoadingLog } from './components/loading/RealTimeLoadingLog';
 import { WaterPointLocations } from './components/locations/WaterPointLocations';
 import { RequestPriorityManager } from './components/requests/RequestPriorityManager';
+import { SettingsModule } from './components/settings/SettingsModule';
 
 const MainLayout: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -43,6 +44,7 @@ const MainLayout: React.FC = () => {
           {activeTab === 'ro-points' && <WaterPointLocations category="RO" />}
           {activeTab === 'standard-points' && <WaterPointLocations category="Standard" />}
           {activeTab === 'requests' && <RequestPriorityManager />}
+          {activeTab === 'settings' && <SettingsModule />}
         </main>
       </div>
     </div>

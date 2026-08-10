@@ -6,10 +6,13 @@ import {
   Filter,
   Layers,
   AlertOctagon,
+  Settings,
   ChevronRight,
-  X
+  X,
+  ShieldCheck
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -25,6 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setIsMobileMenuOpen
 }) => {
   const { priorityLocations, roLocations, standardLocations } = useData();
+  const { isMasterAdmin, user } = useAuth();
 
   const navItems = [
     {
@@ -74,6 +78,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   ];
 
+  if (isMasterAdmin) {
+    navItems.push({
+      id: 'settings',
+      label: 'Settings & Master Control',
+      icon: Settings,
+      badge: null,
+      badgeColor: undefined,
+      description: 'User management, database deletion & bulk upload'
+    });
+  }
+
   const handleSelectTab = (id: string) => {
     setActiveTab(id);
     if (setIsMobileMenuOpen) {
@@ -105,6 +120,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <X className="h-5 w-5" />
             </button>
           )}
+        </div>
+
+        {/* User Role Status Pill */}
+        <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+          <span className="text-[10px] text-slate-400 font-bold uppercase">Role:</span>
+          <span
+            className={`font-black text-[11px] px-2 py-0.5 rounded ${
+              user?.role === 'Master Admin'
+                ? 'bg-amber-950 text-amber-300 border border-amber-700'
+                : user?.role === 'Admin'
+                ? 'bg-cyan-950 text-cyan-300 border border-cyan-700'
+                : 'bg-slate-800 text-slate-300'
+            }`}
+          >
+            {user?.role}
+          </span>
         </div>
 
         {/* Module Navigation Buttons */}

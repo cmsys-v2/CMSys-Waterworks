@@ -419,3 +419,10 @@ export const INITIAL_REQUESTS: WaterRequest[] = [
     remarks: 'Routine meal preparation top-up'
   }
 ];
+
+// Alias Exports
+export const SEED_RO_LOCATIONS = INITIAL_RO_LOCATIONS;
+export const SEED_STANDARD_LOCATIONS = INITIAL_STANDARD_LOCATIONS;
+export const SEED_BOWSER_DUTIES = INITIAL_BOWSER_DUTIES;
+export const SEED_LOADING_LOGS = INITIAL_LOADING_LOGS;
+export const SEED_WATER_REQUESTS = INITIAL_REQUESTS;

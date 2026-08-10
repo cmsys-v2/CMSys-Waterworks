@@ -49,7 +49,6 @@ export const RequestPriorityManager: React.FC = () => {
       requiredVolume,
       urgency,
       isPriority: isPriorityRequest,
-      status: isPriorityRequest || urgency === 'Emergency' ? 'Priority' : 'Pending',
       requestedBy,
       contactPhone,
       remarks

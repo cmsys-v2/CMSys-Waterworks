@@ -11,6 +11,8 @@ export type LocationType =
 
 export type RequestStatus = 'Pending' | 'Priority' | 'Assigned' | 'In-Transit' | 'Fulfilled' | 'Rejected';
 
+export type UserRole = 'Master Admin' | 'Admin' | 'Viewer';
+
 export interface ScheduleItem {
   id: string;
   pipelinePlace: string;
@@ -28,7 +30,9 @@ export interface BowserRegistryEntry {
   pin: string; // Predetermined PIN (e.g. 1001 ... 1030)
   capacity: number; // in Liters
   defaultTaName: string; // Transport Assistant name
-  defaultMeName: string; // Engineering Mechanic (supporting bowser)
+  defaultTaNumber?: string; // TA Official Number
+  defaultMeName: string; // Engineering Mechanic name
+  defaultMeNumber?: string; // ME Official Number
 }
 
 export interface BowserDuty {
@@ -39,7 +43,7 @@ export interface BowserDuty {
   taName: string; // Transport Assistant name
   taNumber: string; // TA Official Number
   taContract: string; // TA Phone / Contract info
-  dutyMeName: string; // Engineering Mechanic name (supporting bowser)
+  dutyMeName: string; // Engineering Mechanic name
   dutyMeNumber: string; // ME Official Number
   dutyMeContract: string; // ME Phone / Contract info
   dutyDate: string; // YYYY-MM-DD
@@ -140,6 +144,7 @@ export interface AdminUser {
   uid: string;
   username: string;
   name: string;
-  role: 'Chief Water Engineer' | 'Admin' | 'Duty Officer';
+  role: UserRole;
   badgeNumber: string;
+  password?: string;
 }
