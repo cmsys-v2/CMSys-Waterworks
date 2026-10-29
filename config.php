@@ -11,21 +11,21 @@ ini_set('display_errors', 1);
 
 // =============================================
 // FIREBASE DB #1 — Sailors / Personnel (READ ONLY)
-// Project: ce-admin-panel2025
+// Project: cmsys-v2
 // =============================================
-define('FB1_PROJECT_ID',    'ce-admin-panel2025');
-define('FB1_API_KEY',       'AIzaSyDmHdg1FfgR_-4pKJ5z0inI8-BZ21MUtvg');
-define('FB1_DB_URL',        'https://ce-admin-panel2025-default-rtdb.firebaseio.com');
-define('FB1_AUTH_DOMAIN',   'ce-admin-panel2025.firebaseapp.com');
+define('FB1_PROJECT_ID',    'cmsys-v2');
+define('FB1_API_KEY',       'AIzaSyD2taQsUz26yfLoqnFgs-ED6WcFveUXS8w');
+define('FB1_DB_URL',        'https://cmsys-v2-default-rtdb.asia-southeast1.firebasedatabase.app');
+define('FB1_AUTH_DOMAIN',   'cmsys-v2.firebaseapp.com');
 
 // =============================================
 // FIREBASE DB #2 — NCW-PS Operations (READ + WRITE)
-// Project: ncw-ps-operations
+// Project: cmsys-v2
 // =============================================
-define('FB2_PROJECT_ID',    'ncw-ps-operations');
-define('FB2_API_KEY',       'AIzaSyCRgW9qcd42Ks_C56csNL85jXd5OsLD8q0');
-define('FB2_DB_URL',        'https://ncw-ps-operations-default-rtdb.asia-southeast1.firebasedatabase.app');
-define('FB2_AUTH_DOMAIN',   'ncw-ps-operations.firebaseapp.com');
+define('FB2_PROJECT_ID',    'cmsys-v2');
+define('FB2_API_KEY',       'AIzaSyD2taQsUz26yfLoqnFgs-ED6WcFveUXS8w');
+define('FB2_DB_URL',        'https://cmsys-v2-default-rtdb.asia-southeast1.firebasedatabase.app');
+define('FB2_AUTH_DOMAIN',   'cmsys-v2.firebaseapp.com');
 
 // =============================================
 // Application Settings
