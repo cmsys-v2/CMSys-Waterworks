@@ -420,3 +420,174 @@ INSERT INTO approved_pending_jobs (reference_no, reference_type, description, au
 ('MS/NCW/2024/002', 'Minute Sheet', 'Workshop Building Foundation', 'CCEO(E)', 1800000.00, '2024-01-20'),
 ('SIG/NCW/2024/015', 'Signal', 'Emergency Jetty Repair', 'CO NHQ', 500000.00, '2024-02-01'),
 ('MS/NCW/2024/005', 'Minute Sheet', 'Quarters Block Renovation', 'CCED(E)', 3200000.00, '2024-02-10');
+
+
+-- ========================================================
+-- WATER DISTRIBUTION MONITORING HUB - CMSys-Waterworks
+-- Database Extensions for Storage Tanks, Hydrology & WTP
+-- ========================================================
+
+-- 1. Detailed Storage Tanks Matrix
+CREATE TABLE IF NOT EXISTS `storage_tanks` (
+  `id` VARCHAR(50) PRIMARY KEY,
+  `name` VARCHAR(150) NOT NULL,
+  `code` VARCHAR(50) UNIQUE NOT NULL,
+  `classification` ENUM('MAIN_PUMP_HOUSE', 'OVERHEAD_TOWER', 'VITAL_COMMAND_CHALET', 'VITAL_WARDROOM', 'VITAL_BASE_HOSPITAL', 'PLASTIC_SHELL_SINTEC', 'PLASTIC_SHELL_POLY') NOT NULL,
+  `water_type` ENUM('RO', 'STANDARD', 'RAW_SURFACE') NOT NULL,
+  `form_factor` ENUM('CYLINDRICAL_VERTICAL', 'CYLINDRICAL_HORIZONTAL', 'RECTANGULAR_SUMP') NOT NULL,
+  `length_m` DECIMAL(8,3) NULL,
+  `width_m` DECIMAL(8,3) NULL,
+  `diameter_m` DECIMAL(8,3) NULL,
+  `total_height_m` DECIMAL(8,3) NOT NULL,
+  `usable_height_m` DECIMAL(8,3) NOT NULL,
+  `dead_storage_l` DECIMAL(12,2) DEFAULT 0,
+  `capacity_liters` DECIMAL(12,2) NOT NULL,
+  `current_level_m` DECIMAL(8,3) NOT NULL DEFAULT 0,
+  `current_volume_l` DECIMAL(12,2) NOT NULL DEFAULT 0,
+  `low_alarm_pct` INT DEFAULT 25,
+  `location_area` VARCHAR(150) NOT NULL,
+  `poc_contact` VARCHAR(150) NULL,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 2. Reservoir & Inflow Wells
+CREATE TABLE IF NOT EXISTS `reservoir_wells` (
+  `well_id` VARCHAR(50) PRIMARY KEY,
+  `well_name` VARCHAR(100) NOT NULL,
+  `invert_level_m` DECIMAL(8,3) NOT NULL,
+  `current_water_column_m` DECIMAL(8,3) NOT NULL,
+  `gate_open_pct` INT DEFAULT 100,
+  `discharge_lps` DECIMAL(10,2) NOT NULL,
+  `status` ENUM('ACTIVE', 'ISOLATED', 'SILTED') DEFAULT 'ACTIVE',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `rainfall_logs` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `recorded_date` DATE UNIQUE NOT NULL,
+  `rainfall_mm` DECIMAL(8,2) NOT NULL,
+  `runoff_estimate_l` DECIMAL(14,2) NOT NULL,
+  `recorded_by` VARCHAR(100) NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Chemical Inventory & ND Anandamkulam WTP
+CREATE TABLE IF NOT EXISTS `wtp_chemical_inventory` (
+  `chemical_id` VARCHAR(50) PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `form` ENUM('LIQUID_LITERS', 'DRY_KG', 'CYLINDERS') NOT NULL,
+  `current_stock` DECIMAL(10,2) NOT NULL,
+  `min_threshold` DECIMAL(10,2) NOT NULL,
+  `daily_burn_rate` DECIMAL(10,2) NOT NULL,
+  `last_restocked_date` DATE NULL
+);
+
+CREATE TABLE IF NOT EXISTS `wtp_daily_reports` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `report_date` DATE UNIQUE NOT NULL,
+  `raw_inflow_l` DECIMAL(14,2) NOT NULL,
+  `treated_outflow_l` DECIMAL(14,2) NOT NULL,
+  `raw_turbidity_ntu` DECIMAL(6,2) NOT NULL,
+  `treated_turbidity_ntu` DECIMAL(6,2) NOT NULL,
+  `raw_ph` DECIMAL(4,2) NOT NULL,
+  `treated_ph` DECIMAL(4,2) NOT NULL,
+  `residual_chlorine_ppm` DECIMAL(4,2) NOT NULL,
+  `tds_ppm` DECIMAL(8,2) NOT NULL,
+  `pac_added_kg` DECIMAL(8,2) NOT NULL,
+  `chlorine_added_kg` DECIMAL(8,2) NOT NULL,
+  `coliform_status` ENUM('SAFE_ZERO', 'DETECTED_FAILED', 'PENDING') DEFAULT 'SAFE_ZERO',
+  `jar_test_data` JSON NULL,
+  `duty_roster` JSON NULL,
+  `ai_insights` JSON NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- ========================================================
+-- HUB A: WELL WATER TREATMENT & PUMP CONDITION TELEMETRY
+-- HUB B: COMMERCIAL & NON-NAVAL CONSUMER BILLING (NWSDB 2023)
+-- ========================================================
+
+-- 1. Well Water Treatment & Electromechanical Logs
+CREATE TABLE IF NOT EXISTS `well_water_treatment_logs` (
+  `id` VARCHAR(50) PRIMARY KEY,
+  `recorded_date` DATE NOT NULL,
+  `raw_water_inflow_l` DECIMAL(14,2) NOT NULL,
+  `treated_water_yield_l` DECIMAL(14,2) NOT NULL,
+  `backwash_loss_l` DECIMAL(12,2) DEFAULT 0,
+  `turbidity_ntu` DECIMAL(5,2) NOT NULL,
+  `ph_value` DECIMAL(4,2) NOT NULL,
+  `iron_content_mgl` DECIMAL(5,2) NOT NULL,
+  `hardness_mgl` DECIMAL(6,2) NOT NULL,
+  `residual_chlorine_ppm` DECIMAL(4,2) NOT NULL,
+  `ecoli_status` ENUM('PASS_NIL', 'FAIL_DETECTED') DEFAULT 'PASS_NIL',
+  `chemicals_consumed` JSON NULL,
+  `operator_badge` VARCHAR(50) NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `pump_health_telemetry` (
+  `pump_id` VARCHAR(50) PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `location` VARCHAR(100) NOT NULL,
+  `rated_capacity_lph` DECIMAL(10,2) NOT NULL,
+  `motor_rating_kw` DECIMAL(6,2) NOT NULL,
+  `operational_status` ENUM('RUNNING', 'STANDBY', 'TRIPPED', 'MAINTENANCE') DEFAULT 'STANDBY',
+  `current_amps` DECIMAL(5,2) NOT NULL,
+  `vibration_mms` DECIMAL(5,2) NOT NULL,
+  `temp_celsius` DECIMAL(5,2) NOT NULL,
+  `total_run_hours` DECIMAL(10,2) NOT NULL,
+  `next_service_hours` DECIMAL(10,2) NOT NULL,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 2. Non-Naval Commercial Clients & Accounts
+CREATE TABLE IF NOT EXISTS `non_naval_consumers` (
+  `account_number` VARCHAR(50) PRIMARY KEY,
+  `consumer_name` VARCHAR(150) NOT NULL,
+  `company_name` VARCHAR(150) NOT NULL,
+  `category` ENUM('COMMERCIAL_PRIVATE', 'PORT_AUTHORITY_SLPA', 'CONTRACTOR_AGENCY', 'SHIPPING_VESSEL_CIVILIAN', 'INSTITUTIONAL') NOT NULL,
+  `contact_person` VARCHAR(100) NOT NULL,
+  `phone` VARCHAR(30) NOT NULL,
+  `email` VARCHAR(100) NULL,
+  `connection_point` VARCHAR(150) NOT NULL,
+  `meter_serial` VARCHAR(100) UNIQUE NOT NULL,
+  `status` ENUM('ACTIVE', 'DISCONNECTED', 'UNDER_MAINTENANCE') DEFAULT 'ACTIVE',
+  `current_arrears_lkr` DECIMAL(12,2) DEFAULT 0.00,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Invoices & Billing Register
+CREATE TABLE IF NOT EXISTS `commercial_bills` (
+  `bill_number` VARCHAR(50) PRIMARY KEY,
+  `account_number` VARCHAR(50) NOT NULL,
+  `billing_period` VARCHAR(7) NOT NULL, -- e.g., '2024-10'
+  `bill_date` DATE NOT NULL,
+  `due_date` DATE NOT NULL,
+  `prev_reading_units` DECIMAL(10,2) NOT NULL,
+  `curr_reading_units` DECIMAL(10,2) NOT NULL,
+  `consumed_units` DECIMAL(10,2) NOT NULL,
+  `volumetric_charge_lkr` DECIMAL(12,2) NOT NULL,
+  `fixed_charge_lkr` DECIMAL(10,2) NOT NULL,
+  `arrears_brought_forward_lkr` DECIMAL(12,2) DEFAULT 0.00,
+  `total_payable_lkr` DECIMAL(12,2) NOT NULL,
+  `payment_status` ENUM('UNPAID', 'PARTIALLY_PAID', 'PAID', 'OVERDUE') DEFAULT 'UNPAID',
+  `amount_paid_lkr` DECIMAL(12,2) DEFAULT 0.00,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`account_number`) REFERENCES `non_naval_consumers`(`account_number`) ON DELETE CASCADE
+);
+
+-- 4. Payment Receipts & Ledger
+CREATE TABLE IF NOT EXISTS `commercial_payment_receipts` (
+  `receipt_id` VARCHAR(50) PRIMARY KEY,
+  `bill_number` VARCHAR(50) NOT NULL,
+  `account_number` VARCHAR(50) NOT NULL,
+  `payment_date` DATE NOT NULL,
+  `amount_received_lkr` DECIMAL(12,2) NOT NULL,
+  `payment_method` ENUM('CASH', 'CHEQUE', 'BANK_TRANSFER', 'GOV_VOUCHER') NOT NULL,
+  `ref_number` VARCHAR(100) NOT NULL,
+  `received_by` VARCHAR(100) NOT NULL,
+  `remaining_arrears_lkr` DECIMAL(12,2) NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`bill_number`) REFERENCES `commercial_bills`(`bill_number`)
+);

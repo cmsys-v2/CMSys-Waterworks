@@ -9,7 +9,12 @@ import {
   Settings,
   ChevronRight,
   X,
-  ShieldCheck
+  ShieldCheck,
+  Waves,
+  Database,
+  FlaskConical,
+  Wrench,
+  DollarSign
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
@@ -27,8 +32,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isMobileMenuOpen,
   setIsMobileMenuOpen
 }) => {
-  const { priorityLocations, roLocations, standardLocations } = useData();
+  const {
+    priorityLocations,
+    roLocations,
+    standardLocations,
+    storageTanks,
+    reservoirProfile,
+    commercialBills,
+    pumpsTelemetry
+  } = useData();
   const { isMasterAdmin, user } = useAuth();
+
+  const unpaidBillsCount = commercialBills.filter(
+    b => b.paymentStatus === 'UNPAID' || b.paymentStatus === 'OVERDUE'
+  ).length;
+
+  const trippedPumpsCount = pumpsTelemetry.filter(
+    p => p.status === 'TRIPPED'
+  ).length;
 
   const navItems = [
     {
@@ -36,13 +57,55 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Main Dashboard & Insight',
       icon: LayoutDashboard,
       badge: null,
+      badgeColor: undefined,
       description: 'Location log, receiving stats & consumption analytics'
+    },
+    {
+      id: 'reservoir',
+      label: 'Reservoir & Hydrology',
+      icon: Waves,
+      badge: `${(reservoirProfile.currentStorageLiters / 1000000).toFixed(0)}ML`,
+      badgeColor: 'bg-cyan-950 text-cyan-300 border-cyan-800/60',
+      description: 'Raw basin depth, inflow well sluice gates & rainfall'
+    },
+    {
+      id: 'tanks',
+      label: 'Storage Tanks Matrix',
+      icon: Database,
+      badge: storageTanks.length,
+      badgeColor: 'bg-indigo-950 text-indigo-300 border-indigo-800/60',
+      description: 'Pump house, towers, vital chalets & Sintec dimensions'
+    },
+    {
+      id: 'wtp',
+      label: 'Anandamkulam WTP Hub',
+      icon: FlaskConical,
+      badge: 'WTP',
+      badgeColor: 'bg-blue-950 text-blue-300 border-blue-800/60',
+      description: 'Purification KPIs, jar test, chemical stocks & AI advisor'
+    },
+    {
+      id: 'wellplant',
+      label: 'Well Water & Treatment',
+      icon: Wrench,
+      badge: trippedPumpsCount > 0 ? `${trippedPumpsCount} Trip` : `${pumpsTelemetry.length} Pumps`,
+      badgeColor: trippedPumpsCount > 0 ? 'bg-rose-950 text-rose-300 border-rose-700 animate-pulse' : 'bg-emerald-950 text-emerald-300 border-emerald-800/60',
+      description: 'Hub A: Pump telemetry, water quality & internal billing'
+    },
+    {
+      id: 'commercial',
+      label: 'Commercial Billing Hub',
+      icon: DollarSign,
+      badge: unpaidBillsCount > 0 ? `${unpaidBillsCount} Due` : 'NWSDB',
+      badgeColor: unpaidBillsCount > 0 ? 'bg-amber-950 text-amber-300 border-amber-700' : 'bg-cyan-950 text-cyan-300 border-cyan-800/60',
+      description: 'Hub B: 2023 Gazette tariff, meter billing & client ledger'
     },
     {
       id: 'bowser',
       label: 'Bowser Duty Management',
       icon: Truck,
       badge: null,
+      badgeColor: undefined,
       description: 'Capacity, Naha No, TA, ME & Schedule pop-up creator'
     },
     {
@@ -50,6 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Real-Time Loading Log',
       icon: ClipboardList,
       badge: null,
+      badgeColor: undefined,
       description: 'Loading interface with timer, pump & PIN lock'
     },
     {

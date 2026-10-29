@@ -10,6 +10,11 @@ import { RealTimeLoadingLog } from './components/loading/RealTimeLoadingLog';
 import { WaterPointLocations } from './components/locations/WaterPointLocations';
 import { RequestPriorityManager } from './components/requests/RequestPriorityManager';
 import { SettingsModule } from './components/settings/SettingsModule';
+import { ReservoirHydrologyView } from './components/reservoir/ReservoirHydrologyView';
+import { StorageTankMatrix } from './components/tanks/StorageTankMatrix';
+import { AnandamkulamDashboard } from './components/wtp/AnandamkulamDashboard';
+import { WellWaterPlantDashboard } from './components/wellplant/WellWaterPlantDashboard';
+import { CommercialBillingHub } from './components/commercial/CommercialBillingHub';
 
 const MainLayout: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -39,6 +44,11 @@ const MainLayout: React.FC = () => {
 
         <main className="flex-1 min-w-0">
           {activeTab === 'dashboard' && <MainDashboard />}
+          {activeTab === 'reservoir' && <ReservoirHydrologyView />}
+          {activeTab === 'tanks' && <StorageTankMatrix />}
+          {activeTab === 'wtp' && <AnandamkulamDashboard />}
+          {activeTab === 'wellplant' && <WellWaterPlantDashboard />}
+          {activeTab === 'commercial' && <CommercialBillingHub />}
           {activeTab === 'bowser' && <BowserDutyManagement />}
           {activeTab === 'loading' && <RealTimeLoadingLog />}
           {activeTab === 'ro-points' && <WaterPointLocations category="RO" />}

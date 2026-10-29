@@ -148,3 +148,144 @@ export interface AdminUser {
   badgeNumber: string;
   password?: string;
 }
+
+
+// ========================================================
+// 1. Structural Tank Geometry & Capacity
+// ========================================================
+export type TankFormFactor = 'CYLINDRICAL_VERTICAL' | 'CYLINDRICAL_HORIZONTAL' | 'RECTANGULAR_SUMP';
+
+export type TankClassification = 
+  | 'MAIN_PUMP_HOUSE'
+  | 'OVERHEAD_TOWER'
+  | 'VITAL_COMMAND_CHALET'
+  | 'VITAL_WARDROOM'
+  | 'VITAL_BASE_HOSPITAL'
+  | 'PLASTIC_SHELL_SINTEC'
+  | 'PLASTIC_SHELL_POLY';
+
+export interface TankDimensions {
+  formFactor: TankFormFactor;
+  lengthMeters?: number;   // Rectangular
+  widthMeters?: number;    // Rectangular
+  diameterMeters?: number; // Cylindrical
+  totalHeightMeters: number;
+  usableHeightMeters: number;
+  deadStorageLiters: number;
+  calculatedCapacityLiters: number;
+}
+
+export interface DetailedStorageTank {
+  id: string;
+  name: string;
+  code: string; // e.g., MPH-TK-01, OHT-01, CHALET-TK
+  classification: TankClassification;
+  waterType: 'RO' | 'STANDARD' | 'RAW_SURFACE';
+  dimensions: TankDimensions;
+  currentLevelMeters: number;
+  currentVolumeLiters: number;
+  fillPercentage: number;
+  lowAlarmPercentage: number;
+  criticalAlarmPercentage: number;
+  locationArea: string;
+  pocName?: string;
+  pocPhone?: string;
+  lastUpdated: string;
+}
+
+// ========================================================
+// 2. Reservoir, Well Inlets & Rainfall Telemetry
+// ========================================================
+export interface WellIntakeLevel {
+  wellId: string;
+  wellName: string; // e.g., Well #1 Deep Inflow, Well #2 Radial Collector
+  invertLevelMeters: number;
+  waterColumnMeters: number;
+  sluiceGateOpenPercentage: number;
+  dischargeRateLps: number; // Liters per second
+  operationalStatus: 'ACTIVE' | 'ISOLATED' | 'SILTED';
+}
+
+export interface RainfallRecord {
+  id: string;
+  recordedDate: string; // YYYY-MM-DD
+  rainfallMm: number;
+  catchmentRunoffEstLiters: number;
+  recordedBy: string;
+}
+
+export interface MainReservoirProfile {
+  reservoirName: string;
+  grossCapacityLiters: number;
+  deadStorageLiters: number;
+  currentWaterLevelMeters: number;
+  currentStorageLiters: number;
+  freeboardMeters: number;
+  wells: WellIntakeLevel[];
+  rainfallRecords: RainfallRecord[];
+  intakeLossRatePercentage: number;
+}
+
+// ========================================================
+// 3. ND Anandamkulam Water Treatment Plant (WTP)
+// ========================================================
+export interface ChemicalInventoryItem {
+  id: string;
+  name: string; // PAC (Poly Aluminium Chloride), Chlorine Gas, Alum, Lime, Polymer
+  physicalForm: 'LIQUID_LITERS' | 'DRY_KG' | 'CYLINDERS';
+  currentStock: number;
+  minimumThreshold: number;
+  dailyAverageConsumption: number;
+  runwayDays: number;
+  reorderStatus: 'ADEQUATE' | 'REORDER_NOW' | 'CRITICAL';
+}
+
+export interface JarTestExecution {
+  timestamp: string;
+  rawWaterTurbidityNtu: number;
+  rawWaterPh: number;
+  waterTemperatureC: number;
+  optimalDosePpm: number; // mg/L
+  selectedCoagulant: 'PAC' | 'ALUM';
+  settledTurbidityNtu: number;
+  calculatedChemicalRequiredKg: number; // Computed against raw water intake volume
+}
+
+export interface DailyWTPTestReport {
+  id: string;
+  date: string;
+  rawWaterInflowLiters: number;
+  treatedWaterOutflowLiters: number;
+  sludgeDischargeLiters: number;
+  waterQuality: {
+    rawTurbidityNtu: number;
+    treatedTurbidityNtu: number;
+    rawPh: number;
+    treatedPh: number;
+    residualChlorinePpm: number;
+    totalDissolvedSolidsPpm: number;
+    conductivityUsCm?: number;
+    coliformBacteriologicalResult: 'SAFE_ZERO' | 'DETECTED_FAILED' | 'PENDING';
+  };
+  jarTest: JarTestExecution;
+  chemicalsConsumed: {
+    chemicalId: string;
+    chemicalName: string;
+    quantityUsed: number;
+  }[];
+  plantOverheadTanks: DetailedStorageTank[];
+  plantTreatedStorageTanks: DetailedStorageTank[];
+  dutyRoster: {
+    shift: 'MORNING_WATCH' | 'EVENING_WATCH' | 'NIGHT_WATCH';
+    shiftEngineerRating: string;
+    pumpOperator: string;
+    labAnalyst: string;
+  }[];
+  aiWaterQualityInsight?: {
+    coagulantOptimizationAdvice: string;
+    chlorineDosingAdjustment: string;
+    filterBackwashRecommendation: string;
+    anomalyDetected: boolean;
+    confidenceScore: number;
+  };
+}
